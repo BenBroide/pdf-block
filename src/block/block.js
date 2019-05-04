@@ -1,6 +1,7 @@
 const { RichText, MediaUpload, PlainText } = wp.editor;
 const { registerBlockType } = wp.blocks;
 const { Button } = wp.components;
+const el = wp.element.createElement;
 
 // Import our CSS files
 import './style.scss';
@@ -10,9 +11,12 @@ const pdfThumb = ( pdfUrl ) => {
 	return pdfUrl.replace( '.pdf' , '-pdf.jpg')
 }
 
+
+
+
 registerBlockType('card-block/main', {
-	title: 'Card',
-	icon: 'heart',
+	title: 'PDF Block',
+	icon: 'upload',
 	category: 'common',
 	attributes: {
 		title: {
@@ -36,14 +40,19 @@ registerBlockType('card-block/main', {
 	edit({ attributes, className, setAttributes }) {
 
 		const getImageButton = (openEvent) => {
+			console.log(attributes );
 			if(attributes.imageUrl) {
 				return (
+					<div>
 					<img
 						src={ pdfThumb(attributes.imageUrl) }
 						onClick={ openEvent }
-						style={{ width : '40px'}}
+						style={{ width : '800px'}}
 						className="image"
 					/>
+						<div>{attributes.title}</div>
+					<div>{attributes.imageUrl}</div>
+					</div>
 				);
 			}
 			else {
@@ -53,7 +62,7 @@ registerBlockType('card-block/main', {
 							onClick={ openEvent }
 							className="button button-large"
 						>
-							Pick an image
+							Select PDF File
 						</Button>
 					</div>
 				);
@@ -63,24 +72,10 @@ registerBlockType('card-block/main', {
 		return (
 			<div className="container">
 				<MediaUpload
-					onSelect={ media => { setAttributes({ imageAlt: media.alt, imageUrl: media.url }); } }
+					onSelect={ media => { setAttributes({ imageAlt: media.alt, imageUrl: media.url, title : media.title }); } }
 					type="pdf"
 					value={ attributes.imageUrl }
 					render={ ({ open }) => getImageButton(open) }
-				/>
-				<PlainText
-					onChange={ content => setAttributes({ title: content }) }
-					value={ attributes.imageUrl }
-					placeholder="Your card title"
-					className="heading"
-				/>
-				<RichText
-					onChange={ content => setAttributes({ body: content }) }
-					value={ attributes.body }
-					multiline="p"
-					placeholder="Your card text"
-					formattingControls={ ['bold', 'italic', 'underline'] }
-					isSelected={ attributes.isSelected }
 				/>
 			</div>
 		);
@@ -89,7 +84,7 @@ registerBlockType('card-block/main', {
 
 	save({ attributes }) {
 
-		const cardImage = (src, alt) => {
+		const pdfImage = (src, alt, title ) => {
 			if(!src) return null;
 
 			if(alt) {
@@ -100,33 +95,33 @@ registerBlockType('card-block/main', {
 						className="card__image"
 						src={ pdfThumb( src ) }
 						alt={ alt }
-						style={{width:'30px'}}
+						style={{width:'80px'}}
 					/>
-					<a href={src}>Download file</a>
+						<h3 className="card__title">{ title }</h3>
+						<a href={src}>Download file</a>
 					</div>
 				);
 			}
 
 			// No alt set, so let's hide it from screen readers
 			return (
-				<img
-					className="card__image"
-					src={ pdfThumb( src ) }
-					alt=""
-					aria-hidden="true"
-				/>
+				<div>
+					<img
+						className="card__image"
+						src={ pdfThumb( src ) }
+						alt={ alt }
+						style={{width:'800px'}}
+					/>
+					<h3 className="card__title">{ title }</h3>
+
+					<a href={src}>Download file</a>
+				</div>
 			);
 		};
 
 		return (
 			<div className="card">
-				{ cardImage(attributes.imageUrl, attributes.imageAlt) }
-				<div className="card__content">
-					<h3 className="card__title">{ attributes.title }</h3>
-					<div className="card__body">
-						{ attributes.body }
-					</div>
-				</div>
+				{ pdfImage(attributes.imageUrl, attributes.imageAlt, attributes.title ) }
 			</div>
 		);
 	}
